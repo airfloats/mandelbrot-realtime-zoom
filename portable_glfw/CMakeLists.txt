@@ -28,12 +28,16 @@ FetchContent_MakeAvailable(glfw imgui)
 find_package(OpenGL REQUIRED)
 
 set(MANDELBROT_APP_KIND)
+set(MANDELBROT_PLATFORM_SOURCES)
 if(APPLE)
+  enable_language(OBJCXX)
   set(MANDELBROT_APP_KIND MACOSX_BUNDLE)
+  list(APPEND MANDELBROT_PLATFORM_SOURCES src/macos_gestures.mm)
 endif()
 
 add_executable(mandelbrot_glfw ${MANDELBROT_APP_KIND}
   src/main.cpp
+  ${MANDELBROT_PLATFORM_SOURCES}
   ${imgui_SOURCE_DIR}/imgui.cpp
   ${imgui_SOURCE_DIR}/imgui_draw.cpp
   ${imgui_SOURCE_DIR}/imgui_tables.cpp

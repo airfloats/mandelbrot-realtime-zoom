@@ -18,6 +18,16 @@
 
 #include <GLFW/glfw3.h>
 
+#if defined(__APPLE__)
+extern "C" void MandelbrotInstallMacGestureBridge(GLFWwindow* window);
+extern "C" double MandelbrotConsumeMacMagnifyDelta();
+extern "C" void MandelbrotShutdownMacGestureBridge();
+#else
+inline void MandelbrotInstallMacGestureBridge(GLFWwindow*) {}
+inline double MandelbrotConsumeMacMagnifyDelta() { return 0.0; }
+inline void MandelbrotShutdownMacGestureBridge() {}
+#endif
+
 namespace {
 
 using Clock = std::chrono::steady_clock;
@@ -408,17 +418,18 @@ void updateAutoZoom(AppState& state, double dt) {
   state.dirty = true;
 }
 
-void handleInput(AppState& state, int width, int height, double nowSeconds) {
+void handleInput(AppState& state, int width, int height, double nativeZoomDelta, double nowSeconds) {
   ImGuiIO& io = ImGui::GetIO();
   const bool mouseInWindow = io.MousePos.x >= 0.0f && io.MousePos.y >= 0.0f &&
                              io.MousePos.x < static_cast<float>(width) &&
                              io.MousePos.y < static_cast<float>(height);
   const bool canvasInput = mouseInWindow && !io.WantCaptureMouse;
+  const float zoomDelta = io.MouseWheel + static_cast<float>(nativeZoomDelta * 12.0);
 
-  if (canvasInput && io.MouseWheel != 0.0f) {
+  if (canvasInput && std::abs(zoomDelta) > 0.0001f) {
     const Real beforeX = screenToWorldX(io.MousePos.x, width, height, state);
     const Real beforeY = screenToWorldY(io.MousePos.y, height, state);
-    const Real factor = std::pow(static_cast<Real>(1.18L), static_cast<Real>(io.MouseWheel));
+    const Real factor = std::pow(static_cast<Real>(1.18L), static_cast<Real>(zoomDelta));
     state.zoom = std::max(static_cast<Real>(0.05L), state.zoom * factor);
     const Real afterX = screenToWorldX(io.MousePos.x, width, height, state);
     const Real afterY = screenToWorldY(io.MousePos.y, height, state);
@@ -571,6 +582,7 @@ int main() {
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
   glfwMaximizeWindow(window);
+  MandelbrotInstallMacGestureBridge(window);
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -608,9 +620,14 @@ int main() {
 
     int fbWidth = 1;
     int fbHeight = 1;
+    int windowWidth = 1;
+    int windowHeight = 1;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    glfwGetWindowSize(window, &windowWidth, &windowHeight);
     fbWidth = std::max(1, fbWidth);
     fbHeight = std::max(1, fbHeight);
+    windowWidth = std::max(1, windowWidth);
+    windowHeight = std::max(1, windowHeight);
 
     updateAutoZoom(state, std::clamp(dt, 0.0, 0.1));
 
@@ -618,7 +635,7 @@ int main() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    handleInput(state, fbWidth, fbHeight, nowSeconds);
+    handleInput(state, windowWidth, windowHeight, MandelbrotConsumeMacMagnifyDelta(), nowSeconds);
     if (!io.WantCaptureKeyboard) {
       if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
         state.autoZoom = !state.autoZoom;
@@ -678,11 +695,11 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-    drawList->AddRectFilled(ImVec2(0, 0), ImVec2(static_cast<float>(fbWidth), static_cast<float>(fbHeight)), IM_COL32(4, 5, 5, 255));
+    drawList->AddRectFilled(ImVec2(0, 0), ImVec2(static_cast<float>(windowWidth), static_cast<float>(windowHeight)), IM_COL32(4, 5, 5, 255));
     if (frameTexture != 0) {
       drawList->AddImage(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(frameTexture)),
                          ImVec2(0, 0),
-                         ImVec2(static_cast<float>(fbWidth), static_cast<float>(fbHeight)));
+                         ImVec2(static_cast<float>(windowWidth), static_cast<float>(windowHeight)));
     }
 
     drawControls(state, stats, renderer.busy(), renderer.progress(), nowSeconds);
@@ -697,6 +714,7 @@ int main() {
   }
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  MandelbrotShutdownMacGestureBridge();
   ImGui::DestroyContext();
   glfwDestroyWindow(window);
   glfwTerminate();
