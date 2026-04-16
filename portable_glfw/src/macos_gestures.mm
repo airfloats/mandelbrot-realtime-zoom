@@ -19,7 +19,7 @@ extern "C" void MandelbrotInstallMacGestureBridge(GLFWwindow* window) {
   }
 
   g_magnifyMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMagnify
-                                                           handler:^NSEvent* _Nullable(NSEvent* event) {
+                                                           handler:^NSEvent* (NSEvent* event) {
                                                              if (g_targetWindow == nil || [event window] == g_targetWindow) {
                                                                g_pendingMagnify += [event magnification];
                                                                return nil;
@@ -42,4 +42,3 @@ extern "C" void MandelbrotShutdownMacGestureBridge() {
   g_targetWindow = nil;
   g_pendingMagnify = 0.0;
 }
-
