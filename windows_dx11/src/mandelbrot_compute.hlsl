@@ -21,6 +21,26 @@ float3 paletteColor(float t) {
     float base = pow(t, 0.22);
     return float3(base, base * (0.72 + 0.28 * band), base * 0.78);
   }
+  if (palette == 3) {
+    float u = t * 18.0;
+    float band = floor(u);
+    float local = frac(u);
+    float hard = local < 0.58 ? 1.0 : 0.05;
+    float m = fmod(band, 6.0);
+    float3 c = float3(1.0, 0.96, 0.08);
+    if (m >= 1.0 && m < 2.0) {
+      c = float3(0.0, 0.92, 1.0);
+    } else if (m >= 2.0 && m < 3.0) {
+      c = float3(1.0, 0.0, 0.86);
+    } else if (m >= 3.0 && m < 4.0) {
+      c = float3(1.0, 1.0, 1.0);
+    } else if (m >= 4.0 && m < 5.0) {
+      c = float3(0.16, 1.0, 0.0);
+    } else if (m >= 5.0) {
+      c = float3(1.0, 0.31, 0.0);
+    }
+    return c * hard;
+  }
   return 0.5 + 0.5 * cos(6.2831853 * (float3(t, t, t) + float3(0.04, 0.34, 0.67)));
 }
 

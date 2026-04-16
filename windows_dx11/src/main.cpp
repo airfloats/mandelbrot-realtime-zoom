@@ -402,6 +402,23 @@ uint32_t paletteColor(double t, int palette) {
     return packBgra(toByte(base), toByte(base * (0.72 + 0.28 * band)), toByte(base * 0.78));
   }
 
+  if (palette == 3) {
+    const double u = t * 18.0;
+    const int band = static_cast<int>(std::floor(u));
+    const double local = u - static_cast<double>(band);
+    const double hard = local < 0.58 ? 1.0 : 0.05;
+    const uint8_t colors[][3] = {
+        {255, 245, 20},
+        {0, 235, 255},
+        {255, 0, 220},
+        {255, 255, 255},
+        {40, 255, 0},
+        {255, 80, 0},
+    };
+    const uint8_t* c = colors[band % 6];
+    return packBgra(toByte(c[0] * hard), toByte(c[1] * hard), toByte(c[2] * hard));
+  }
+
   const double r = 128.0 + 127.0 * std::cos(pi2 * (t + 0.04));
   const double g = 128.0 + 127.0 * std::cos(pi2 * (t + 0.34));
   const double b = 128.0 + 127.0 * std::cos(pi2 * (t + 0.67));
@@ -2034,7 +2051,7 @@ void drawControls(
     markInteraction(state, nowSeconds);
   }
 
-  const char* palettes[] = {"余弦色带", "热力色带", "印刷色带"};
+  const char* palettes[] = {"余弦色带", "热力色带", "印刷色带", "高对比霓虹"};
   if (ImGui::Combo("配色", &state.palette, palettes, IM_ARRAYSIZE(palettes))) {
     markInteraction(state, nowSeconds);
   }
