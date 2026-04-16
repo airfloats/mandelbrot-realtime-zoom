@@ -11,6 +11,13 @@
 
 macOS 和 Linux 版本优先保证可运行。它们目前用 `long double`，深度放大精度低于 Windows `__float128` 版本。后续要做同等级深度放大，应接入 MPFR 或 Boost.Multiprecision。
 
+macOS release 包使用 ad-hoc 签名，不是 Apple Developer ID 公证包。如果 macOS 仍提示“已损坏，无法打开”，在终端进入解压目录后执行：
+
+```bash
+xattr -dr com.apple.quarantine mandelbrot_glfw.app
+open mandelbrot_glfw.app
+```
+
 ## GitHub Builds
 
 仓库带有 GitHub Actions：

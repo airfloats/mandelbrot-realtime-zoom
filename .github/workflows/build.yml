@@ -108,6 +108,10 @@ jobs:
         run: cmake -S portable_glfw -B build/macos-arm64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64
       - name: Build
         run: cmake --build build/macos-arm64 --config Release
+      - name: Ad-hoc sign app
+        run: |
+          codesign --force --deep --sign - build/macos-arm64/mandelbrot_glfw.app
+          codesign --verify --deep --strict --verbose=2 build/macos-arm64/mandelbrot_glfw.app
       - name: Package
         run: |
           mkdir -p dist
@@ -130,6 +134,10 @@ jobs:
         run: cmake -S portable_glfw -B build/macos-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64
       - name: Build
         run: cmake --build build/macos-x64 --config Release
+      - name: Ad-hoc sign app
+        run: |
+          codesign --force --deep --sign - build/macos-x64/mandelbrot_glfw.app
+          codesign --verify --deep --strict --verbose=2 build/macos-x64/mandelbrot_glfw.app
       - name: Package
         run: |
           mkdir -p dist
