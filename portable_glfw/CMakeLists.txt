@@ -17,6 +17,12 @@ FetchContent_Declare(
   imgui
   URL https://github.com/ocornut/imgui/archive/refs/tags/v1.90.9.zip
 )
+
+if(UNIX AND NOT APPLE)
+  set(GLFW_BUILD_X11 ON CACHE BOOL "Build GLFW with X11 support" FORCE)
+  set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "Build GLFW with Wayland support" FORCE)
+endif()
+
 FetchContent_MakeAvailable(glfw imgui)
 
 find_package(OpenGL REQUIRED)
@@ -63,4 +69,3 @@ if(APPLE)
     MACOSX_BUNDLE_BUNDLE_VERSION "1"
   )
 endif()
-
